@@ -79,15 +79,14 @@ function showOutput(data) {
   container.innerHTML = '';
 
   const info = document.getElementById('infoPanel');
-  info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
+  const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
+  info.innerHTML = placeholder;
 
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  data.originalText.split('\n').forEach(line => {
+  data.originalText.split('\n').forEach((line, lineIndex) => {
     const p = document.createElement('p');
-    const wrapper = document.createElement('span');
-    wrapper.className = 'sentence-text';
     const tokens = line.split(/(\s+)/);
 
     tokens.forEach(token => {
@@ -103,10 +102,10 @@ function showOutput(data) {
           if (selected) {
             info.textContent = defMap[wordClean];
           } else {
-            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
+            info.innerHTML = placeholder;
           }
         };
-        wrapper.appendChild(span);
+        p.appendChild(span);
 
       } else if (wordClean) {
         const span = document.createElement('span');
@@ -114,23 +113,23 @@ function showOutput(data) {
         span.className = 'word';
         span.onclick = () => {
           clearKeywordHighlights();
-          const idx = data.sentences.findIndex(s => s.includes(token.trim()));
+          clearSentenceHighlights();
+          const idx = lineIndex;
           const translation = data.translations[idx];
-          const selected = wrapper.classList.toggle('highlight-sentence');
+          const selected = p.classList.toggle('highlight-sentence');
           if (selected) {
             info.textContent = translation;
           } else {
-            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
+            info.innerHTML = placeholder;
           }
         };
-        wrapper.appendChild(span);
+        p.appendChild(span);
 
       } else {
-        wrapper.appendChild(document.createTextNode(token));
+        p.appendChild(document.createTextNode(token));
       }
     });
 
-    p.appendChild(wrapper);
     container.appendChild(p);
   });
 }
