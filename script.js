@@ -12,17 +12,21 @@ async function processText() {
   const translations = document.getElementById('translationInput').value.trim().split('\n');
   const defLines = document.getElementById('definitionsInput').value.trim().split('\n');
 
-  if (!bookName || !textTitle || !originalText) return alert("Kitap adı, metin başlığı ve orijinal metin zorunlu.");
+  if (!bookName || !textTitle || !originalText) {
+    return alert("Kitap adı, metin başlığı ve orijinal metin zorunlu.");
+  }
 
   const sentences = originalText.match(/[^.!?]+[.!?]+/g) || [originalText];
-  if (translations.length !== sentences.length) return alert("Çeviri sayısı cümle sayısıyla eşleşmiyor.");
+  if (translations.length !== sentences.length) {
+    return alert("Çeviri sayısı cümle sayısıyla eşleşmiyor.");
+  }
 
   const definitions = defLines.map(line => {
     const [w, ...m] = line.split(':');
     return { word: w.trim(), meaning: m.join(':').trim() };
   }).filter(d => d.word && d.meaning);
 
-  const storeObj = { originalText, sentences, translations, definitions };
+  const storeObj = { sentences, translations, definitions };
   try {
     await saveText(bookName, textTitle, storeObj);
     alert("Kaydedildi.");
@@ -70,60 +74,57 @@ function showOutput(data) {
   const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
   info.innerHTML = placeholder;
 
-  // helper to clear highlights
-  function clearSentenceHighlights() {
-    document.querySelectorAll('p.highlight-sentence').forEach(p => p.classList.remove('highlight-sentence'));
-  }
-  function clearKeywordHighlights() {
-    document.querySelectorAll('span.highlight-keyword').forEach(s => s.classList.remove('highlight-keyword'));
+  // clear existing highlights
+  function clearAllHighlights() {
+    document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
+    document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
   }
 
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  // render each sentence preserving paragraphs
-  data.originalText.split('\n').forEach((line, idx) => {
+  // Render each sentence as a paragraph
+  data.sentences.forEach((sent, idx) => {
     const p = document.createElement('p');
     p.setAttribute('data-sentence-index', idx);
-    const tokens = line.split(/(\s+)/);
+    const tokens = sent.split(/(\s+)/);
+
     tokens.forEach(token => {
-      const word = token.trim();
-      const wordClean = word.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
+      const wordClean = token.trim().replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
       let span;
+
+      // Keyword span
       if (defMap[wordClean]) {
-        // keyword
         span = document.createElement('span');
         span.textContent = token;
         span.className = 'keyword';
         span.onclick = e => {
           e.stopPropagation();
-          clearSentenceHighlights();
-          clearKeywordHighlights();
-          const selected = span.classList.toggle('highlight-keyword');
-          if (selected) info.textContent = defMap[wordClean];
-          else info.innerHTML = placeholder;
+          clearAllHighlights();
+          const isActive = span.classList.toggle('highlight-keyword');
+          info.innerHTML = isActive ? defMap[wordClean] : placeholder;
         };
+        p.appendChild(span);
+
+      // Normal word span for translation
       } else if (wordClean) {
-        // normal word
         span = document.createElement('span');
         span.textContent = token;
         span.className = 'word';
         span.onclick = e => {
           e.stopPropagation();
-          clearKeywordHighlights();
-          clearSentenceHighlights();
-          const selected = p.classList.toggle('highlight-sentence');
-          const si = parseInt(p.getAttribute('data-sentence-index'), 10);
-          if (selected) info.textContent = data.translations[si];
-          else info.innerHTML = placeholder;
+          clearAllHighlights();
+          const isActive = p.classList.toggle('highlight-sentence');
+          info.innerHTML = isActive ? data.translations[idx] : placeholder;
         };
+        p.appendChild(span);
+
+      // Whitespace/punctuation
       } else {
-        // whitespace or punctuation
         p.appendChild(document.createTextNode(token));
-        return;
       }
-      p.appendChild(span);
     });
+
     container.appendChild(p);
   });
 }
