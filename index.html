@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Power</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3367D6">
+<link rel="stylesheet" href="style.css">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<h1>Reading Power</h1>
+<div id="app">
+  <div id="upload-section">
+    <input type="text" id="bookName" placeholder="Kitap Adı">
+    <input type="text" id="textTitle" placeholder="Metin Başlığı">
+    <textarea id="inputText" placeholder="Orjinal İngilizce Metni buraya yapıştırın"></textarea>
+    <textarea id="translationInput" placeholder="Çevirileri cümle sırasına göre alt alta yazın"></textarea>
+    <textarea id="definitionsInput" placeholder="Tanımları 'kelime: anlam' biçiminde alt alta yazın"></textarea>
+    <button id="processBtn">Kaydet</button>
+  </div>
+  <div id="booksSection">
+    <h2>Kitaplar</h2>
+    <ul id="booksList"></ul>
+    <small>Silmek için 'Sil' butonuna basın.</small>
+  </div>
+  <div id="outputSection">
+    <h2 id="outputTitle"></h2>
+    <div id="textContainer"></div>
+    <div id="infoPanel"><em>Tıklanan öğenin bilgisi burada gösterilecek.</em></div>
+  </div>
+</div>
+
+<!-- Service Worker registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(console.error);
+}
+</script>
+
+<!-- Firebase config - REPLACE with your project config -->
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function saveText(bookName, textTitle, storeObj) {
+  const docRef = db.collection('texts').doc(`${bookName}::${textTitle}`);
+  await docRef.set(storeObj);
+}
+
+async function deleteText(bookName, textTitle) {
+  const docRef = db.collection('texts').doc(`${bookName}::${textTitle}`);
+  await docRef.delete();
+}
+
+async function loadAllTexts() {
+  const snapshot = await db.collection('texts').get();
+  const data = {};
+  snapshot.forEach(doc => {
+    const [book, title] = doc.id.split('::');
+    if (!data[book]) data[book] = [];
+    data[book].push({ title, content: doc.data() });
+  });
+  return data;
+}
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
