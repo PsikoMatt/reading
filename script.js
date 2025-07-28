@@ -26,7 +26,7 @@ async function processText() {
     return { word: w.trim(), meaning: m.join(':').trim() };
   }).filter(d => d.word && d.meaning);
 
-  const storeObj = { sentences, translations, definitions };
+  const storeObj = { originalText, sentences, translations, definitions };
   try {
     await saveText(bookName, textTitle, storeObj);
     alert("Kaydedildi.");
@@ -42,17 +42,21 @@ async function renderBooks() {
   const ul = document.getElementById('booksList');
   ul.innerHTML = '';
   for (const book in data) {
-    const li = document.createElement('li'); li.textContent = book;
+    const li = document.createElement('li');
+    li.textContent = book;
     const sub = document.createElement('ul');
     data[book].forEach(item => {
       const { title, content } = item;
       const li2 = document.createElement('li');
+
       const btn = document.createElement('button');
       btn.textContent = title;
       btn.onclick = () => showOutput(content);
       li2.appendChild(btn);
+
       const del = document.createElement('button');
-      del.textContent = 'Sil'; del.className = 'delete-btn';
+      del.textContent = 'Sil';
+      del.className = 'delete-btn';
       del.onclick = async () => {
         if (confirm(`"${title}" silinsin mi?`)) {
           await deleteText(book, title);
@@ -60,6 +64,7 @@ async function renderBooks() {
         }
       };
       li2.appendChild(del);
+
       sub.appendChild(li2);
     });
     li.appendChild(sub);
@@ -74,55 +79,64 @@ function showOutput(data) {
   const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
   info.innerHTML = placeholder;
 
-  // clear existing highlights
-  function clearAllHighlights() {
-    document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
-    document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
-  }
-
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  // Render each sentence as a paragraph
-  data.sentences.forEach((sent, idx) => {
+  // clear existing highlights and panel
+  function clearHighlights() {
+    document.querySelectorAll('.highlight-sentence')
+      .forEach(el => el.classList.remove('highlight-sentence'));
+    document.querySelectorAll('.highlight-keyword')
+      .forEach(el => el.classList.remove('highlight-keyword'));
+    info.innerHTML = placeholder;
+  }
+
+  // Render paragraphs preserving original breaks
+  const paragraphs = data.originalText.split(/\r?\n/);
+  let sentenceIdx = 0;
+  paragraphs.forEach(par => {
     const p = document.createElement('p');
-    p.setAttribute('data-sentence-index', idx);
-    const tokens = sent.split(/(\s+)/);
 
-    tokens.forEach(token => {
-      const wordClean = token.trim().replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
-      let span;
+    // Split paragraph into sentences
+    const paraSentences = par.match(/[^.!?]+[.!?]+/g) || [par];
+    paraSentences.forEach(sent => {
+      const tokens = sent.split(/(\s+)/);
 
-      // Keyword span
-      if (defMap[wordClean]) {
-        span = document.createElement('span');
-        span.textContent = token;
-        span.className = 'keyword';
-        span.onclick = e => {
-          e.stopPropagation();
-          clearAllHighlights();
-          const isActive = span.classList.toggle('highlight-keyword');
-          info.innerHTML = isActive ? defMap[wordClean] : placeholder;
-        };
-        p.appendChild(span);
+      tokens.forEach(token => {
+        const wordClean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
+        if (defMap[wordClean]) {
+          // Keyword
+          const span = document.createElement('span');
+          span.textContent = token;
+          span.className = 'keyword';
+          span.onclick = e => {
+            e.stopPropagation();
+            clearHighlights();
+            span.classList.add('highlight-keyword');
+            info.textContent = defMap[wordClean];
+          };
+          p.appendChild(span);
 
-      // Normal word span for translation
-      } else if (wordClean) {
-        span = document.createElement('span');
-        span.textContent = token;
-        span.className = 'word';
-        span.onclick = e => {
-          e.stopPropagation();
-          clearAllHighlights();
-          const isActive = p.classList.toggle('highlight-sentence');
-          info.innerHTML = isActive ? data.translations[idx] : placeholder;
-        };
-        p.appendChild(span);
+        } else if (wordClean) {
+          // Normal word → sentence highlight
+          const span = document.createElement('span');
+          span.textContent = token;
+          span.className = 'word';
+          span.onclick = e => {
+            e.stopPropagation();
+            clearHighlights();
+            p.classList.add('highlight-sentence');
+            info.textContent = data.translations[sentenceIdx];
+          };
+          p.appendChild(span);
 
-      // Whitespace/punctuation
-      } else {
-        p.appendChild(document.createTextNode(token));
-      }
+        } else {
+          // Whitespace or punctuation
+          p.appendChild(document.createTextNode(token));
+        }
+      });
+
+      sentenceIdx++;
     });
 
     container.appendChild(p);
