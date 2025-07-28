@@ -15,7 +15,6 @@ async function processText() {
   if (!bookName || !textTitle || !originalText) {
     return alert("Kitap adı, metin başlığı ve orijinal metin zorunlu.");
   }
-
   const sentences = originalText.match(/[^.!?]+[.!?]+/g) || [originalText];
   if (translations.length !== sentences.length) {
     return alert("Çeviri sayısı cümle sayısıyla eşleşmiyor.");
@@ -74,7 +73,7 @@ function showOutput(data) {
   const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
   info.innerHTML = placeholder;
 
-  // clear highlights and panel
+  // Clear all highlights and reset panel
   function clearHighlights() {
     document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
     document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
@@ -84,57 +83,60 @@ function showOutput(data) {
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  // Global sentence index
-  let globalIdx = 0;
+  const paragraphs = data.originalText.split(/\r?\n/);
+  let sentenceIndex = 0;
 
-  // Render paragraphs preserving original breaks
-  data.originalText.split(/\r?\n/).forEach(par => {
+  paragraphs.forEach(par => {
     const p = document.createElement('p');
 
-    // Split into sentences for this paragraph
-    const paraSents = par.match(/[^.!?]+[.!?]+/g) || [par];
-    paraSents.forEach(sent => {
-      // Create a span wrapping the entire sentence
+    // Split paragraph into sentences or take as single
+    const paraSents = par.match(/[^.!?]+[.!?]+/g) || (par ? [par] : []);
+    paraSents.forEach(sentText => {
+      // Create wrapper span for sentence
       const sentSpan = document.createElement('span');
       sentSpan.className = 'sentence-span';
-      sentSpan.setAttribute('data-idx', globalIdx);
 
-      // Tokenize the sentence
-      const tokens = sent.split(/(\s+)/);
+      // Tokenize sentence preserving whitespace
+      const tokens = sentText.split(/(\s+)/);
       tokens.forEach(token => {
         const clean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
         if (defMap[clean]) {
-          // Keyword span
           const kw = document.createElement('span');
           kw.textContent = token;
           kw.className = 'keyword';
           kw.onclick = e => {
             e.stopPropagation();
+            const active = kw.classList.contains('highlight-keyword');
             clearHighlights();
-            kw.classList.add('highlight-keyword');
-            info.textContent = defMap[clean];
+            if (!active) {
+              kw.classList.add('highlight-keyword');
+              info.textContent = defMap[clean];
+            }
           };
           sentSpan.appendChild(kw);
-        } else {
-          // Word span for translation click
+        } else if (clean) {
           const wd = document.createElement('span');
           wd.textContent = token;
           wd.className = 'word';
           wd.onclick = e => {
             e.stopPropagation();
+            const active = sentSpan.classList.contains('highlight-sentence');
             clearHighlights();
-            sentSpan.classList.add('highlight-sentence');
-            info.textContent = data.translations[globalIdx];
+            if (!active) {
+              sentSpan.classList.add('highlight-sentence');
+              info.textContent = data.translations[sentenceIndex];
+            }
           };
           sentSpan.appendChild(wd);
+        } else {
+          sentSpan.appendChild(document.createTextNode(token));
         }
       });
 
       p.appendChild(sentSpan);
-      globalIdx++;
+      sentenceIndex++;
     });
 
-    
     container.appendChild(p);
   });
 }
