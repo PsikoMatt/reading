@@ -42,21 +42,17 @@ async function renderBooks() {
   const ul = document.getElementById('booksList');
   ul.innerHTML = '';
   for (const book in data) {
-    const li = document.createElement('li');
-    li.textContent = book;
+    const li = document.createElement('li'); li.textContent = book;
     const sub = document.createElement('ul');
     data[book].forEach(item => {
       const { title, content } = item;
       const li2 = document.createElement('li');
-
       const btn = document.createElement('button');
       btn.textContent = title;
       btn.onclick = () => showOutput(content);
       li2.appendChild(btn);
-
       const del = document.createElement('button');
-      del.textContent = 'Sil';
-      del.className = 'delete-btn';
+      del.textContent = 'Sil'; del.className = 'delete-btn';
       del.onclick = async () => {
         if (confirm(`"${title}" silinsin mi?`)) {
           await deleteText(book, title);
@@ -64,7 +60,6 @@ async function renderBooks() {
         }
       };
       li2.appendChild(del);
-
       sub.appendChild(li2);
     });
     li.appendChild(sub);
@@ -79,64 +74,64 @@ function showOutput(data) {
   const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
   info.innerHTML = placeholder;
 
-  const defMap = {};
-  data.definitions.forEach(d => defMap[d.word] = d.meaning);
-
-  // clear existing highlights and panel
+  // clear highlights and panel
   function clearHighlights() {
-    document.querySelectorAll('.highlight-sentence')
-      .forEach(el => el.classList.remove('highlight-sentence'));
-    document.querySelectorAll('.highlight-keyword')
-      .forEach(el => el.classList.remove('highlight-keyword'));
+    document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
+    document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
     info.innerHTML = placeholder;
   }
 
+  const defMap = {};
+  data.definitions.forEach(d => defMap[d.word] = d.meaning);
+
+  // Global sentence index
+  let globalIdx = 0;
+
   // Render paragraphs preserving original breaks
-  const paragraphs = data.originalText.split(/\r?\n/);
-  let sentenceIdx = 0;
-  paragraphs.forEach(par => {
+  data.originalText.split(/\r?\n/).forEach(par => {
     const p = document.createElement('p');
 
-    // Split paragraph into sentences
-    const paraSentences = par.match(/[^.!?]+[.!?]+/g) || [par];
-    paraSentences.forEach(sent => {
+    // Split into sentences for this paragraph
+    const paraSents = par.match(/[^.!?]+[.!?]+/g) || [par];
+    paraSents.forEach(sent => {
+      // Create a span wrapping the entire sentence
+      const sentSpan = document.createElement('span');
+      sentSpan.className = 'sentence-span';
+      sentSpan.setAttribute('data-idx', globalIdx);
+
+      // Tokenize the sentence
       const tokens = sent.split(/(\s+)/);
-
       tokens.forEach(token => {
-        const wordClean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
-        if (defMap[wordClean]) {
-          // Keyword
-          const span = document.createElement('span');
-          span.textContent = token;
-          span.className = 'keyword';
-          span.onclick = e => {
+        const clean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
+        if (defMap[clean]) {
+          // Keyword span
+          const kw = document.createElement('span');
+          kw.textContent = token;
+          kw.className = 'keyword';
+          kw.onclick = e => {
             e.stopPropagation();
             clearHighlights();
-            span.classList.add('highlight-keyword');
-            info.textContent = defMap[wordClean];
+            kw.classList.add('highlight-keyword');
+            info.textContent = defMap[clean];
           };
-          p.appendChild(span);
-
-        } else if (wordClean) {
-          // Normal word → sentence highlight
-          const span = document.createElement('span');
-          span.textContent = token;
-          span.className = 'word';
-          span.onclick = e => {
-            e.stopPropagation();
-            clearHighlights();
-            p.classList.add('highlight-sentence');
-            info.textContent = data.translations[sentenceIdx];
-          };
-          p.appendChild(span);
-
+          sentSpan.appendChild(kw);
         } else {
-          // Whitespace or punctuation
-          p.appendChild(document.createTextNode(token));
+          // Word span for translation click
+          const wd = document.createElement('span');
+          wd.textContent = token;
+          wd.className = 'word';
+          wd.onclick = e => {
+            e.stopPropagation();
+            clearHighlights();
+            sentSpan.classList.add('highlight-sentence');
+            info.textContent = data.translations[globalIdx];
+          };
+          sentSpan.appendChild(wd);
         }
       });
 
-      sentenceIdx++;
+      p.appendChild(sentSpan);
+      globalIdx++;
     });
 
     container.appendChild(p);
