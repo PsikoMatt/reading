@@ -7,3 +7,31 @@ input, button { width: 100%; margin: 5px 0; padding: 8px; box-sizing: border-box
 .word { color: black; cursor: pointer; }
 .delete-btn { margin-left: 8px; background: #e74c3c; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px; }
 #infoPanel { margin-top: 15px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; min-height: 40px; }
+/* sayfanın içeriği panelin altında kalmasın diye alttan boşluk */
+body {
+  padding-bottom: 80px; /* panel yüksekliğine göre ayarlayın */
+}
+
+/* bilgi panelini sabitle */
+#infoPanel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 700px;
+  box-sizing: border-box;
+  background: #f9f9f9;
+  border-top: 1px solid #ccc;
+  padding: 10px;
+  z-index: 1000;
+}
+
+/* metin alanının altına dokunmayın; overflow zaten ayarlı */
+#textContainer {
+  overflow-x: auto;
+  white-space: pre;
+  /* isterseniz dikey kaydırmayı da sınırlayabilirsiniz:
+     max-height: calc(100vh - 300px);
+  */
+}
