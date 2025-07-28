@@ -86,6 +86,8 @@ function showOutput(data) {
 
   data.originalText.split('\n').forEach(line => {
     const p = document.createElement('p');
+    const wrapper = document.createElement('span');
+    wrapper.className = 'sentence-text';
     const tokens = line.split(/(\s+)/);
 
     tokens.forEach(token => {
@@ -96,8 +98,7 @@ function showOutput(data) {
         span.textContent = token;
         span.className = 'keyword';
         span.onclick = () => {
-          // Toggle highlight on keyword
-          clearSentenceHighlight();
+          clearSentenceHighlights();
           const selected = span.classList.toggle('highlight-keyword');
           if (selected) {
             info.textContent = defMap[wordClean];
@@ -105,35 +106,36 @@ function showOutput(data) {
             info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
           }
         };
-        p.appendChild(span);
+        wrapper.appendChild(span);
 
       } else if (wordClean) {
         const span = document.createElement('span');
         span.textContent = token;
         span.className = 'word';
         span.onclick = () => {
-          // Toggle highlight on sentence
           clearKeywordHighlights();
-          const isHighlighted = p.classList.toggle('highlight-sentence');
           const idx = data.sentences.findIndex(s => s.includes(token.trim()));
-          if (isHighlighted) {
-            info.textContent = data.translations[idx];
+          const translation = data.translations[idx];
+          const selected = wrapper.classList.toggle('highlight-sentence');
+          if (selected) {
+            info.textContent = translation;
           } else {
             info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
           }
         };
-        p.appendChild(span);
+        wrapper.appendChild(span);
 
       } else {
-        p.appendChild(document.createTextNode(token));
+        wrapper.appendChild(document.createTextNode(token));
       }
     });
 
+    p.appendChild(wrapper);
     container.appendChild(p);
   });
 }
 
-function clearSentenceHighlight() {
+function clearSentenceHighlights() {
   document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
 }
 
