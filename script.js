@@ -134,6 +134,7 @@ function showOutput(data) {
       globalIdx++;
     });
 
+    
     container.appendChild(p);
   });
 }
