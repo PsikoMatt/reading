@@ -31,13 +31,22 @@ body {
   margin: 0.25em 0;  /* üst ve alt boşluk 0.25em olarak ayarlandı */
   line-height: 1.4;  /* satır yüksekliğini biraz sıkılaştırmak için */
 }
-/* Seçili cümle vurgusu */
-.highlight-sentence {
+/* Paragraflar arası boşluğu azalt */
+#textContainer p {
+  margin: 0.25em 0;
+  line-height: 1.4;
+}
+
+/* Seçili cümlenin sadece metin bölümünü vurgula */
+.sentence-text.highlight-sentence {
   background-color: rgba(200, 200, 255, 0.4);
+  padding: 0.1em 0.2em;
+  border-radius: 4px;
 }
 
-/* Seçili anahtar kelime vurgusu */
-.highlight-keyword {
-  background-color: rgba(255, 255, 150, 0.6);
+/* Seçili anahtar kelime için daha belli eden mavi ton */
+.keyword.highlight-keyword {
+  background-color: rgba(51, 103, 214, 0.3);
+  padding: 0.05em 0.15em;
+  border-radius: 3px;
 }
-
