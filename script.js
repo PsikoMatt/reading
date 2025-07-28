@@ -26,7 +26,7 @@ async function processText() {
     return { word: w.trim(), meaning: m.join(':').trim() };
   }).filter(d => d.word && d.meaning);
 
-  const storeObj = { originalText, sentences, translations, definitions };
+  const storeObj = { sentences, translations, definitions };
   try {
     await saveText(bookName, textTitle, storeObj);
     alert("Kaydedildi.");
@@ -48,7 +48,6 @@ async function renderBooks() {
 
     data[book].forEach(item => {
       const { title, content } = item;
-      const key = book + "::" + title;
       const li2 = document.createElement('li');
 
       const btn = document.createElement('button');
@@ -85,9 +84,9 @@ function showOutput(data) {
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  data.originalText.split('\n').forEach(line => {
-    const lineDiv = document.createElement('div');
-    const parts = line.split(/(\s+)/);
+  data.sentences.forEach((sent, idx) => {
+    const sentDiv = document.createElement('div');
+    const parts = sent.split(/(\s+)/);
 
     parts.forEach(token => {
       const wordClean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
@@ -103,10 +102,9 @@ function showOutput(data) {
             info.textContent = defMap[wordClean];
           }
         };
-        lineDiv.appendChild(span);
+        sentDiv.appendChild(span);
 
       } else if (wordClean) {
-        const idx = data.sentences.findIndex(s => s.trim().startsWith(wordClean));
         const span = document.createElement('span');
         span.textContent = token;
         span.className = 'word';
@@ -118,13 +116,13 @@ function showOutput(data) {
             info.textContent = translation;
           }
         };
-        lineDiv.appendChild(span);
+        sentDiv.appendChild(span);
 
       } else {
-        lineDiv.appendChild(document.createTextNode(token));
+        sentDiv.appendChild(document.createTextNode(token));
       }
     });
 
-    container.appendChild(lineDiv);
+    container.appendChild(sentDiv);
   });
 }
