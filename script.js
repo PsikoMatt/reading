@@ -84,7 +84,6 @@ function showOutput(data) {
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  // Paragraf bütünlüğünü koru: orijinal metindeki satır sonlarında <p> ekle
   data.originalText.split('\n').forEach(line => {
     const p = document.createElement('p');
     const tokens = line.split(/(\s+)/);
@@ -97,10 +96,13 @@ function showOutput(data) {
         span.textContent = token;
         span.className = 'keyword';
         span.onclick = () => {
-          if (info.textContent === defMap[wordClean]) {
-            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
-          } else {
+          // Toggle highlight on keyword
+          clearSentenceHighlight();
+          const selected = span.classList.toggle('highlight-keyword');
+          if (selected) {
             info.textContent = defMap[wordClean];
+          } else {
+            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
           }
         };
         p.appendChild(span);
@@ -110,12 +112,14 @@ function showOutput(data) {
         span.textContent = token;
         span.className = 'word';
         span.onclick = () => {
+          // Toggle highlight on sentence
+          clearKeywordHighlights();
+          const isHighlighted = p.classList.toggle('highlight-sentence');
           const idx = data.sentences.findIndex(s => s.includes(token.trim()));
-          const translation = data.translations[idx];
-          if (info.textContent === translation) {
-            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
+          if (isHighlighted) {
+            info.textContent = data.translations[idx];
           } else {
-            info.textContent = translation;
+            info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
           }
         };
         p.appendChild(span);
@@ -127,4 +131,12 @@ function showOutput(data) {
 
     container.appendChild(p);
   });
+}
+
+function clearSentenceHighlight() {
+  document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
+}
+
+function clearKeywordHighlights() {
+  document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
 }
