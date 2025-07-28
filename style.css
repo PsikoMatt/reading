@@ -26,4 +26,9 @@ body {
   box-sizing: border-box;
   z-index: 1000;
 }
+/* Paragraflar arasındaki boşluğu azalt */
+#textContainer p {
+  margin: 0.25em 0;  /* üst ve alt boşluk 0.25em olarak ayarlandı */
+  line-height: 1.4;  /* satır yüksekliğini biraz sıkılaştırmak için */
+}
 
