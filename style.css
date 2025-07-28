@@ -28,7 +28,8 @@ input, button {
 #textContainer {
   margin-top: 20px;
   line-height: 1.6;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-wrap: break-word;
   overflow-x: auto;
 }
 
