@@ -26,7 +26,7 @@ async function processText() {
     return { word: w.trim(), meaning: m.join(':').trim() };
   }).filter(d => d.word && d.meaning);
 
-  const storeObj = { sentences, translations, definitions };
+  const storeObj = { originalText, sentences, translations, definitions };
   try {
     await saveText(bookName, textTitle, storeObj);
     alert("Kaydedildi.");
@@ -84,11 +84,12 @@ function showOutput(data) {
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  data.sentences.forEach((sent, idx) => {
-    const sentDiv = document.createElement('div');
-    const parts = sent.split(/(\s+)/);
+  // Paragraf bütünlüğünü koru: orijinal metindeki satır sonlarında <p> ekle
+  data.originalText.split('\n').forEach(line => {
+    const p = document.createElement('p');
+    const tokens = line.split(/(\s+)/);
 
-    parts.forEach(token => {
+    tokens.forEach(token => {
       const wordClean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
 
       if (defMap[wordClean]) {
@@ -102,13 +103,14 @@ function showOutput(data) {
             info.textContent = defMap[wordClean];
           }
         };
-        sentDiv.appendChild(span);
+        p.appendChild(span);
 
       } else if (wordClean) {
         const span = document.createElement('span');
         span.textContent = token;
         span.className = 'word';
         span.onclick = () => {
+          const idx = data.sentences.findIndex(s => s.includes(token.trim()));
           const translation = data.translations[idx];
           if (info.textContent === translation) {
             info.innerHTML = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
@@ -116,13 +118,13 @@ function showOutput(data) {
             info.textContent = translation;
           }
         };
-        sentDiv.appendChild(span);
+        p.appendChild(span);
 
       } else {
-        sentDiv.appendChild(document.createTextNode(token));
+        p.appendChild(document.createTextNode(token));
       }
     });
 
-    container.appendChild(sentDiv);
+    container.appendChild(p);
   });
 }
