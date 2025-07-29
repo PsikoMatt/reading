@@ -76,12 +76,11 @@ input, button {
   line-height: 1.4;
 }
 
-/* Highlight entire sentence span */
+/* Highlight entire sentence */
 .sentence-span.highlight-sentence {
   background-color: rgba(200, 200, 255, 0.4);
   padding: 0.1em 0.2em;
   border-radius: 4px;
-  display: inline;
 }
 
 /* Highlight keyword */
