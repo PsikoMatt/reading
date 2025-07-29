@@ -37,6 +37,7 @@ input, button {
 .keyword {
   color: blue;
   cursor: pointer;
+  display: inline-block;
 }
 
 .word {
@@ -76,16 +77,21 @@ input, button {
   line-height: 1.4;
 }
 
+/* Clickable sentence span */
+.sentence-span {
+  cursor: pointer;
+}
+
 /* Highlight entire sentence */
 .sentence-span.highlight-sentence {
-  background-color: rgba(200, 200, 255, 0.4);
+  background-color: rgba(100, 149, 237, 0.4);
   padding: 0.1em 0.2em;
   border-radius: 4px;
 }
 
 /* Highlight keyword */
 .keyword.highlight-keyword {
-  background-color: rgba(51, 103, 214, 0.3);
+  background-color: rgba(30, 144, 255, 0.6);
   padding: 0.05em 0.15em;
   border-radius: 3px;
 }
