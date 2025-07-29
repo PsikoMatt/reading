@@ -3,8 +3,7 @@ body {
   font-family: Arial, sans-serif;
   margin: 10px;
   padding: 0;
-  /* Ensure content isn't hidden behind the fixed info panel */
-  padding-bottom: 80px;
+  padding-bottom: 80px; /* Ensure content isn't hidden behind the fixed info panel */
 }
 
 #app {
@@ -33,26 +32,44 @@ input, button {
   overflow-x: auto;
 }
 
-/* Buttons and text styling */
-.keyword {
-  color: blue;
+/* Paragraph spacing */
+#textContainer p {
+  margin: 0.25em 0;
+  line-height: 1.4;
+}
+
+/* Span wrapper for sentences */
+.sentence-span {
   cursor: pointer;
   display: inline-block;
 }
 
-.word {
-  color: black;
-  cursor: pointer;
+/* Highlight entire sentence */
+.sentence-span.highlight-sentence {
+  background-color: rgba(100, 149, 237, 0.4);
+  border-radius: 4px;
+  padding: 0.1em 0.2em;
 }
 
-.delete-btn {
-  margin-left: 8px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 2px 6px;
+/* Keyword styling */
+.keyword {
+  color: #007BFF;
   cursor: pointer;
+  display: inline-block;
+  padding: 0.05em 0.1em;
   border-radius: 3px;
+}
+
+/* Highlight keyword */
+.keyword.highlight-keyword {
+  background-color: rgba(0, 123, 255, 0.5);
+}
+
+/* Word styling */
+.word {
+  color: inherit;
+  cursor: pointer;
+  display: inline;
 }
 
 /* Fixed info panel at bottom */
@@ -71,27 +88,13 @@ input, button {
   min-height: 40px;
 }
 
-/* Paragraph spacing */
-#textContainer p {
-  margin: 0.25em 0;
-  line-height: 1.4;
-}
-
-/* Clickable sentence span */
-.sentence-span {
+/* Delete button */
+.delete-btn {
+  margin-left: 8px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 2px 6px;
   cursor: pointer;
-}
-
-/* Highlight entire sentence */
-.sentence-span.highlight-sentence {
-  background-color: rgba(100, 149, 237, 0.4);
-  padding: 0.1em 0.2em;
-  border-radius: 4px;
-}
-
-/* Highlight keyword */
-.keyword.highlight-keyword {
-  background-color: rgba(30, 144, 255, 0.6);
-  padding: 0.05em 0.15em;
   border-radius: 3px;
 }
