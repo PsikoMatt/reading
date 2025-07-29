@@ -41,21 +41,17 @@ async function renderBooks() {
   const data = await loadAllTexts();
   const ul = document.getElementById('booksList');
   ul.innerHTML = '';
-
   for (const book in data) {
     const li = document.createElement('li');
     li.textContent = book;
     const sub = document.createElement('ul');
-
     data[book].forEach(item => {
       const { title, content } = item;
       const li2 = document.createElement('li');
-
       const btn = document.createElement('button');
       btn.textContent = title;
       btn.onclick = () => showOutput(content);
       li2.appendChild(btn);
-
       const del = document.createElement('button');
       del.textContent = 'Sil';
       del.className = 'delete-btn';
@@ -66,10 +62,8 @@ async function renderBooks() {
         }
       };
       li2.appendChild(del);
-
       sub.appendChild(li2);
     });
-
     li.appendChild(sub);
     ul.appendChild(li);
   }
@@ -82,94 +76,66 @@ function showOutput(data) {
   const placeholder = '<em>Tıklanan öğenin bilgisi burada gösterilecek.</em>';
   info.innerHTML = placeholder;
 
-  // Clear all highlights and reset panel
   function clearHighlights() {
-    document.querySelectorAll('.highlight-sentence')
-      .forEach(el => el.classList.remove('highlight-sentence'));
-    document.querySelectorAll('.highlight-keyword')
-      .forEach(el => el.classList.remove('highlight-keyword'));
+    document.querySelectorAll('.highlight-sentence').forEach(el => el.classList.remove('highlight-sentence'));
+    document.querySelectorAll('.highlight-keyword').forEach(el => el.classList.remove('highlight-keyword'));
     info.innerHTML = placeholder;
   }
 
   const defMap = {};
   data.definitions.forEach(d => defMap[d.word] = d.meaning);
 
-  // Build regex for keywords (longest first)
-  const keywords = Object.keys(defMap)
-    .sort((a, b) => b.length - a.length)
-    .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const kwRegex = new RegExp(`(${keywords.join('|')})`, 'g');
-
-  // Split original text into paragraphs
+  // Preserve original paragraphs
   const paragraphs = data.originalText.split(/\r?\n/);
-  let sentIdx = 0;
-
+  let sentenceIndex = 0;
   paragraphs.forEach(par => {
-    const pElem = document.createElement('p');
-    let offset = 0;
-
-    // Iterate sentences
-    while (sentIdx < data.sentences.length) {
-      const sentence = data.sentences[sentIdx];
-      const idx = par.indexOf(sentence, offset);
-      if (idx < 0) break;
-
-      // Text before sentence
-      if (idx > offset) {
-        pElem.appendChild(document.createTextNode(par.slice(offset, idx)));
-      }
-
-      // Wrap sentence span
+    const pTag = document.createElement('p');
+    // Only split for translation alignment, but preserve text segments
+    const paraSentences = par.match(/[^.!?]+[.!?]+/g) || (par ? [par] : []);
+    paraSentences.forEach(sent => {
       const spanSent = document.createElement('span');
       spanSent.className = 'sentence-span';
-      spanSent.dataset.idx = sentIdx;
+      spanSent.dataset.idx = sentenceIndex;
 
-      // Process keywords inside sentence
-      let last = 0;
-      sentence.replace(kwRegex, (match, capture, pos) => {
-        if (pos > last) {
-          spanSent.appendChild(document.createTextNode(sentence.slice(last, pos)));
+      // Wrap keywords and words
+      let parts = sent.split(/(\s+)/);
+      parts.forEach(token => {
+        const clean = token.replace(/[^\wÇçÖöĞğİıŞşÜü'-]/g, '');
+        if (defMap[clean]) {
+          const kw = document.createElement('span');
+          kw.textContent = token;
+          kw.className = 'keyword';
+          kw.onclick = e => {
+            e.stopPropagation();
+            const active = kw.classList.contains('highlight-keyword');
+            clearHighlights();
+            if (!active) {
+              kw.classList.add('highlight-keyword');
+              info.textContent = defMap[clean];
+            }
+          };
+          spanSent.appendChild(kw);
+        } else if (clean) {
+          const wd = document.createElement('span');
+          wd.textContent = token;
+          wd.className = 'word';
+          wd.onclick = e => {
+            e.stopPropagation();
+            const active = spanSent.classList.contains('highlight-sentence');
+            clearHighlights();
+            if (!active) {
+              spanSent.classList.add('highlight-sentence');
+              info.textContent = data.translations[sentenceIndex];
+            }
+          };
+          spanSent.appendChild(wd);
+        } else {
+          spanSent.appendChild(document.createTextNode(token));
         }
-        const kw = document.createElement('span');
-        kw.textContent = match;
-        kw.className = 'keyword';
-        kw.onclick = e => {
-          e.stopPropagation();
-          const isActive = kw.classList.contains('highlight-keyword');
-          clearHighlights();
-          if (!isActive) {
-            kw.classList.add('highlight-keyword');
-            info.textContent = defMap[match];
-          }
-        };
-        spanSent.appendChild(kw);
-        last = pos + match.length;
       });
-      if (last < sentence.length) {
-        spanSent.appendChild(document.createTextNode(sentence.slice(last)));
-      }
-
-      // Sentence click listener
-      spanSent.addEventListener('click', e => {
-        e.stopPropagation();
-        const isActive = spanSent.classList.contains('highlight-sentence');
-        clearHighlights();
-        if (!isActive) {
-          spanSent.classList.add('highlight-sentence');
-          info.textContent = data.translations[sentIdx];
-        }
-      });
-
-      pElem.appendChild(spanSent);
-      offset = idx + sentence.length;
-      sentIdx++;
-    }
-
-    // Remaining text after last sentence
-    if (offset < par.length) {
-      pElem.appendChild(document.createTextNode(par.slice(offset)));
-    }
-
-    container.appendChild(pElem);
+      pTag.appendChild(spanSent);
+      sentenceIndex++;
+    });
+    container.appendChild(pTag);
   });
 }
